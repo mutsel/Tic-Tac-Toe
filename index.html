@@ -1,15 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tic Tac Toe</title>
-    <link rel="icon" type="image/x-icon" href="./img/">
+    <link rel="icon" type="image/x-icon" href="./tictactoe.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
     <script src="script.js"></script>
 </head>
-<body>
-    
+
+<body onload="init()">
+    <main>
+        <h1>TIC TAC TOE</h1>
+        <section class="board">
+            <div class="row">
+                <div class="cell"></div>
+                <div class="cell border-vertical"></div>
+                <div class="cell"></div>
+            </div>
+            <div class="row border-horizontal">
+                <div class="cell"></div>
+                <div class="cell border-vertical"></div>
+                <div class="cell"></div>
+            </div>
+            <div class="row">
+                <div class="cell"></div>
+                <div class="cell border-vertical"></div>
+                <div class="cell"></div>
+            </div>
+        </section>
+        
+     <div class="winline"></div>   
+    </main>
 </body>
+
 </html>
