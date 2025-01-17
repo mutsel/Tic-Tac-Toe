@@ -23,6 +23,28 @@ h1 {
 }
 
 
+.player {
+    width: 100%;
+    margin-top: 5%;
+    display: flex;
+    justify-content: center;
+    gap: 10%;
+}
+
+
+.active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.inactive {
+    opacity: 0.4;
+    transform: scale(0.9);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+
 .board {
     margin-top: 10%;
     position: relative;
@@ -74,4 +96,23 @@ h1 {
     top: 0;
     left: 0;
     pointer-events: none; /* Damit die Linie das Klicken nicht blockiert */
+}
+
+
+.restart-btn {
+    margin-top: 15%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background-color: rgb(47, 79, 79);
+    font-family: "Orbitron", serif;
+    font-size: 28px;
+    transform: scale(0.9);
+}
+
+
+.restart-btn:hover {
+    cursor: pointer;
+    background-color: rgb(255, 255, 255, 0.1);
+    transform: scale(1);
 }

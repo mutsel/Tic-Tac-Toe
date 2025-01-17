@@ -1,5 +1,11 @@
 const cross = 'X';
 const circle = 'O';
+let currentPlayer = cross;
+let audio_cross = new Audio("./audio/cross.mp3");
+let audio_circle = new Audio("./audio/circle.mp3");
+let audio_win = new Audio("./audio/win.mp3");
+    audio_win.volume = 0.3;
+let audio_restart = new Audio("./audio/restart.mp3");
 
 
 let fields = [
@@ -12,14 +18,12 @@ let fields = [
     null,
     null,
     null,
-]
-
-
-let currentPlayer = cross;
+];
 
 
 function init() {
     renderBoard();
+    updatePlayerSymbols();
 }
 
 
@@ -28,30 +32,30 @@ function renderBoard() {
     const cells = document.querySelectorAll('.cell');
     const board = document.querySelector('.board'); // Das Board-Element
 
-    // Vorherige Linie (falls vorhanden) entfernen
-    const previousLine = board.querySelector('.win-line');
-    if (previousLine) {
-        previousLine.remove();
+    for (let index = 0; index < cells.length; index++) {
+        const cell = cells[index];
+        cell.onclick = function () {
+            makeMove(index, cell); // Funktion zum Setzen des Symbols
+        };
     }
+}
 
-    // Durch das 'fields'-Array iterieren und das jeweilige Symbol in die HTML-Zellen einfügen
-    fields.forEach((fieldsElement, index) => {
-        const cell = cells[index]; // Zelle aus dem DOM holen
 
-        switch (fieldsElement) {
-            case cross:
-                cell.appendChild(createCross()); // Das Kreuz-Symbol einfügen
-                break;
-            case circle:
-                cell.appendChild(createCircle()); // Das Kreis-Symbol einfügen
-                break;
-            default:
-                // Das 'onclick' Event hinzufügen, wenn das Feld leer ist
-                cell.onclick = function () {
-                    makeMove(index, cell); // Funktion zum Setzen des Symbols
-                };
-        }
-    });
+function updatePlayerSymbols() {
+    const circleSymbol = document.getElementById('playerCircle');
+    const crossSymbol = document.getElementById('playerCross');
+
+    if (currentPlayer === circle) {
+        circleSymbol.classList.add('active');
+        circleSymbol.classList.remove('inactive');
+        crossSymbol.classList.add('inactive');
+        crossSymbol.classList.remove('active');
+    } else {
+        crossSymbol.classList.add('active');
+        crossSymbol.classList.remove('inactive');
+        circleSymbol.classList.add('inactive');
+        circleSymbol.classList.remove('active');
+    }
 }
 
 
@@ -64,116 +68,35 @@ function makeMove(index, cell) {
         switch (currentPlayer) {
             case cross:
                 cell.appendChild(createCross()); // Das Kreuz-Symbol einfügen
+                audio_cross.play();
                 break;
             case circle:
                 cell.appendChild(createCircle()); // Das Kreis-Symbol einfügen
+                audio_circle.play();
                 break;
         }
 
         // Das 'onclick' Event entfernen, damit keine weiteren Züge gemacht werden können
         cell.onclick = null;
 
-        // Den aktuellen Spieler wechseln
-        currentPlayer = (currentPlayer === cross) ? circle : cross;
     }
 
     // Überprüfen, ob jemand gewonnen hat
     if (checkWin()) {
         drawWinLine();
         disableAllClicks();
+        // Winner-Audio abspielen
+        setTimeout(() => {
+            audio_win.play();
+        }, 600); // Startet nach 600ms
+    } else {
+        // Den aktuellen Spieler wechseln
+        currentPlayer = (currentPlayer === cross) ? circle : cross;
+        updatePlayerSymbols();
     }
-}
 
-
-function checkWin() {
-    const winPatterns = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8],  // horizontale Linien
-        [0, 3, 6], [1, 4, 7], [2, 5, 8],  // vertikale Linien
-        [0, 4, 8], [2, 4, 6],             // diagonale Linien
-    ];
-
-    for (const [a, b, c] of winPatterns) {
-        if (fields[a] && fields[a] === fields[b] && fields[a] === fields[c]) {
-            return [a, b, c];  // Gibt die Indizes der Siegsfelder zurück
-        }
-    }
-    return null;  // Kein Gewinn
-}
-
-
-function drawWinLine() {
-    const winCells = checkWin(); // Indizes der Zellen, die gewonnen haben
-    if (winCells) {
-        const winline = document.querySelector('.winline');
-        winline.innerHTML = ''; // Vorherige Linie entfernen, falls vorhanden
-
-        // Die Koordinaten der Zellen ermitteln, die den Gewinn ausmachen
-        const cells = document.querySelectorAll('.cell');
-        const cellA = cells[winCells[0]];
-        const cellB = cells[winCells[1]];
-        const cellC = cells[winCells[2]];
-
-        // Berechnung der Mittelpunkte der Zellen (unter Berücksichtigung der Ränder)
-        const getCenter = (cell) => {
-            const rect = cell.getBoundingClientRect(); // Holt die Position der Zelle relativ zum Dokument
-            return {
-                x: rect.left + rect.width / 2,  // Mitte der Zelle in X
-                y: rect.top + rect.height / 2   // Mitte der Zelle in Y
-            };
-        };
-
-        const centerA = getCenter(cellA);
-        const centerB = getCenter(cellB);
-        const centerC = getCenter(cellC);
-
-        // Berechnung der Linie, die durch diese Zellen verläuft
-        const startX = centerA.x;
-        const startY = centerA.y;
-        const endX = centerC.x;
-        const endY = centerC.y;
-
-        // Berechnung der Vektoren
-        const dx = endX - startX;
-        const dy = endY - startY;
-        const length = Math.sqrt(dx * dx + dy * dy); // Ursprüngliche Länge der Linie
-        const angle = Math.atan2(dy, dx) * (180 / Math.PI); // Winkel der Linie
-
-        // Verlängern der Linie um einen Prozentsatz der ursprünglichen Länge (z.B. 25%)
-        const extendedLength = length + (length * 0.25); // Verlängerung um 25%
-
-        // Berechnung der neuen Endpunkte basierend auf der verlängerten Länge
-        const factor = extendedLength / length; // Faktor, um den Vektor zu verlängern
-        const extendedDX = dx * factor;
-        const extendedDY = dy * factor;
-
-        const newStartX = startX - (extendedDX - dx) / 2; // Startpunkt verschieben
-        const newStartY = startY - (extendedDY - dy) / 2; // Startpunkt verschieben
-        const newEndX = endX + (extendedDX - dx) / 2; // Endpunkt verschieben
-        const newEndY = endY + (extendedDY - dy) / 2; // Endpunkt verschieben
-
-        // Erstelle das `div` für die Gewinnlinie
-        const line = document.createElement('div');
-        line.style.position = 'absolute';
-        line.style.top = `${newStartY - 2}px`; // Position der Linie anpassen
-        line.style.left = `${newStartX - 2}px`; // Position der Linie anpassen
-        line.style.width = `${extendedLength}px`;
-        line.style.height = '8px'; // Dicke der Linie
-        line.style.backgroundColor = 'black';
-        line.style.transformOrigin = '0 50%'; // Die Linie dreht sich um den Startpunkt
-        line.style.transform = `rotate(${angle}deg)`; // Drehung der Linie, um den Winkel anzupassen
-        line.style.pointerEvents = 'none'; // Verhindert, dass die Linie mit der Maus interagiert
-
-        // Füge die Linie zum `.winline`-Container hinzu
-        winline.appendChild(line);
-    }
-}
-
-
-function disableAllClicks() {
-    const cells = document.querySelectorAll('.cell');
-    cells.forEach(cell => {
-        cell.onclick = null; // Entfernt den 'onclick' Handler
-    });
+    console.log(fields);
+    
 }
 
 
@@ -192,7 +115,7 @@ function createCircle() {
     circle.setAttribute("cy", "40"); // Kreismittelpunkt yS
     circle.setAttribute("r", "28"); // Radius (28px Durchmesser)
     circle.setAttribute("stroke", "#8c4b60"); // Farbe der Linie
-    circle.setAttribute("stroke-width", "6"); // Breite der Linie (deutlich dicker)
+    circle.setAttribute("stroke-width", "8"); // Breite der Linie (deutlich dicker)
     circle.setAttribute("fill", "none"); // Kein Füllbereich
     circle.setAttribute("stroke-dasharray", "175.93"); // LängeS des Kreises (2 * π * r)
     circle.setAttribute("stroke-dashoffset", "175.93"); // Vollständig "ausgeblendet"
@@ -205,7 +128,7 @@ function createCircle() {
     animate.setAttribute("attributeName", "stroke-dashoffset");
     animate.setAttribute("from", "175.93"); // Startpunkt der Animation
     animate.setAttribute("to", "0"); // Endpunkt der Animation
-    animate.setAttribute("dur", "0.40s"); // Dauer der Animation (250ms)
+    animate.setAttribute("dur", "0.40s"); // Dauer der Animation (400ms)
     animate.setAttribute("fill", "freeze"); // Nach der Animation stehen bleiben
 
     // Animation an den Kreis anhängen
@@ -234,7 +157,7 @@ function createCross() {
     line1.setAttribute("x2", "68"); // Endpunkt x (rechts oben)
     line1.setAttribute("y2", "12");  // Endpunkt y (rechts oben)
     line1.setAttribute("stroke", "#9c8959"); // Farbe der Linie
-    line1.setAttribute("stroke-width", "6"); // Breite der Linie
+    line1.setAttribute("stroke-width", "8"); // Breite der Linie
     line1.setAttribute("stroke-dasharray", "79.37"); // Länge der Linie
     line1.setAttribute("stroke-dashoffset", "79.37"); // Linie vollständig "ausgeblendet"
 
@@ -254,7 +177,7 @@ function createCross() {
     line2.setAttribute("x2", "68"); // Endpunkt x (rechts unten)
     line2.setAttribute("y2", "68"); // Endpunkt y (rechts unten)
     line2.setAttribute("stroke", "#9c8959"); // Farbe der Linie
-    line2.setAttribute("stroke-width", "6"); // Breite der Linie
+    line2.setAttribute("stroke-width", "8"); // Breite der Linie
     line2.setAttribute("stroke-dasharray", "79.37"); // Länge der Linie
     line2.setAttribute("stroke-dashoffset", "79.37"); // Linie vollständig "ausgeblendet"
 
@@ -273,4 +196,123 @@ function createCross() {
     svg.appendChild(line2);
 
     return svg; // SVG-Element zurückgeben
+}
+
+
+function checkWin() {
+    const winPatterns = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],  // horizontale Linien
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],  // vertikale Linien
+        [0, 4, 8], [2, 4, 6],             // diagonale Linien
+    ];
+
+    for (const [a, b, c] of winPatterns) {
+        if (fields[a] && fields[a] === fields[b] && fields[a] === fields[c]) {
+            return [a, b, c];  // Gibt die Indizes der Siegsfelder zurück
+        }
+    }
+    return null;  // Kein Gewinn
+}
+
+
+function drawWinLine() {
+    const winCells = checkWin(); // Indizes der Zellen, die gewonnen haben
+    if (winCells) {
+        const winline = document.querySelector('.winline');
+
+        // Die Koordinaten der Zellen ermitteln, die den Gewinn ausmachen
+        const cells = document.querySelectorAll('.cell');
+        const cellA = cells[winCells[0]];
+        const cellC = cells[winCells[2]];
+
+        // Berechnung der Mittelpunkte der Zellen
+        const getCenter = (cell) => {
+            const rect = cell.getBoundingClientRect();
+            return {
+                x: rect.left + rect.width / 2, // Mitte der Zelle in X
+                y: rect.top + rect.height / 2, // Mitte der Zelle in Y
+            };
+        };
+
+        const centerA = getCenter(cellA);
+        const centerC = getCenter(cellC);
+
+        // Berechnung der Linie
+        const startX = centerA.x;
+        const startY = centerA.y;
+        const endX = centerC.x;
+        const endY = centerC.y;
+
+        // Vektoren und Winkel
+        const dx = endX - startX;
+        const dy = endY - startY;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+        // Verlängerung um 50%
+        const extendedLength = length * 1.5;
+        const factor = extendedLength / length;
+        const extendedDX = dx * factor;
+        const extendedDY = dy * factor;
+
+        const newStartX = startX - (extendedDX - dx) / 2;
+        const newStartY = startY - (extendedDY - dy) / 2;
+
+        // Erstelle das `div` für die Linie
+        const line = document.createElement('div');
+        line.style.position = 'absolute';
+        line.style.top = `${newStartY - 2}px`;
+        line.style.left = `${newStartX - 2}px`;
+        line.style.width = '0px'; // Startbreite auf 0 setzen
+        line.style.height = '16px'; // Dicke der Linie
+        line.style.backgroundColor = '#73568f';
+        line.style.transformOrigin = '0 50%'; // Ursprung für Drehung
+        line.style.transform = `rotate(${angle}deg)`; // Linie ausrichten
+        line.style.pointerEvents = 'none'; // Verhindert Interaktionen
+        line.style.transition = 'width 400ms ease-out'; // Animation der Breite
+
+        // Linie in das `.winline`-Element einfügen
+        winline.appendChild(line);
+
+        // Nach 400ms die Breite der Linie auf die verlängerte Länge setzen
+        setTimeout(() => {
+            line.style.width = `${extendedLength}px`;
+        }, 400); // Startet nach 400ms
+    }
+}
+
+
+function disableAllClicks() {
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+        cell.onclick = null; // Entfernt den 'onclick' Handler
+    });
+}
+
+
+function restartGame() {
+    audio_restart.play();
+    
+    // Inhalte des Arrays zurücksetzen
+    fields = Array(9).fill(null);
+
+    // Spielfeld zurücksetzen
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+        cell.innerHTML = ''; // Inhalt der Zelle entfernen
+        cell.onclick = null; // Klick-Event entfernen
+    });
+
+    // Vorherige Linie (falls vorhanden) entfernen
+    const previousLine = document.querySelector('.winline div');
+    if (previousLine) {
+        previousLine.remove();
+    }
+
+    // Spielsymbole neu rendern
+    renderBoard();
+
+    // Aktuellen Spieler zurücksetzen (optional)
+    currentPlayer = cross;
+    updatePlayerSymbols();
 }

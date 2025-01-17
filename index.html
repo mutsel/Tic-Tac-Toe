@@ -18,6 +18,19 @@
 <body onload="init()">
     <main>
         <h1>TIC TAC TOE</h1>
+
+        <section class="player">
+            <svg id="playerCircle" clas="inactive" xmlns="http://www.w3.org/2000/svg" width="80" height="80"
+                viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="28" stroke="#8c4b60" stroke-width="8" fill="none" />
+            </svg>
+            <svg id="playerCross" clas="active" xmlns="http://www.w3.org/2000/svg" width="80" height="80"
+                viewBox="0 0 80 80">
+                <line x1="12" y1="12" x2="68" y2="68" stroke="#9c8959" stroke-width="8" />
+                <line x1="68" y1="12" x2="12" y2="68" stroke="#9c8959" stroke-width="8" />
+            </svg>
+        </section>
+
         <section class="board">
             <div class="row">
                 <div class="cell"></div>
@@ -35,8 +48,10 @@
                 <div class="cell"></div>
             </div>
         </section>
-        
-     <div class="winline"></div>   
+
+        <div class="winline"></div>
+
+        <button class="restart-btn" onclick="restartGame()">Restart</button>
     </main>
 </body>
 
